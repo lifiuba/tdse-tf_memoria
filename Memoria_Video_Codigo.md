@@ -97,7 +97,7 @@ El objetivo del trabajo fue diseñar e implementar un prototipo de controlador d
 - Elegir la fuente de calor (resistencia superior, inferior y convección) con un bloque de *dip switches*.
 - Regular la luz interna del horno con un potenciómetro y una salida PWM (*Pulse Width Modulation*).
 - Monitorear y comandar la cocción desde un teléfono celular, mediante un módulo BLE (*Bluetooth Low Energy*) HM-10.
-- Guardar recetas y la última configuración en memoria no volátil.
+- Guardar recetas y la última configuración en memoria FLASH interna.
 - Señalizar el estado con LEDs y un *buzzer*, y pasar a un modo de falla seguro ante sobretemperatura o falla del sensor.
 
 ### 1.2 Diagrama en bloques general
