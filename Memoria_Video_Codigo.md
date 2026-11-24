@@ -267,8 +267,8 @@ El trabajo se desarrolló en etapas, que se resumen en la tabla 3.1. Las entrega
 | [completar] | *Firmware* base | Se unió la arquitectura del TP3 (super-loop, *tick* de 1 ms, máquinas de estado, LCD y botones) con el ADC y el PWM del TP4. Se agregaron las tareas nuevas: control, BLE y memoria. Se validó la lógica con una simulación en PC antes de tener el *hardware* armado (ver sección 4.2). |
 | [completar] | Asignación de pines | Se remapearon periféricos para evitar conflictos entre el TP3 y el TP4 (ver subsección 3.2.2). |
 | [completar] | Cambios de *hardware* | EEPROM externa reemplazada por Flash interna; relés reemplazados por LEDs; resistencia fija de la NTC cambiada de 4,7 kΩ a 1 kΩ y límites de temperatura ajustados al rango de la NTC. |
-| 20/11/2026 | Entrega 03: Informe de Avance | Estado de cada requisito. Primeras pruebas por módulo en protoboard. |
-| [completar] | Depuración en protoboard | Se resolvieron fallas del LCD (conexionado) y un error de inicialización del actuador que dejaba apagado el LED de reposo (ver sección 4.2). Se probaron los comandos BLE. |
+| 20/11/2026 | Entrega 03: [Informe de Avance](Informe_de_Avance.md) | Primeras pruebas por módulo en protoboard. En ese momento estaban implementados pero sin probar el tiempo restante y la alerta de falla en el LCD (2.4, 2.5); faltaban configurar la melodía y el tono de falla del *buzzer* (6.1, 6.3), el titileo de los LEDs (4.4) y el PWM de la luz (5.2); y los comandos recibidos por BLE todavía no ejecutaban la acción pedida (7.3, 7.4). Ya se habían decidido los LEDs en lugar de relés y el LED RGB. |
+| [completar] | Depuración en protoboard | Se resolvieron fallas del LCD (conexionado) y un error de inicialización del actuador que dejaba apagado el LED de reposo (ver sección 4.2). Se completaron los pendientes del informe de avance y se verificó que los comandos BLE ejecutaran la acción correspondiente. [completar: qué se cambió para que funcionaran los comandos, el *buzzer* y el PWM] |
 | [completar] | Prueba integral en protoboard | Funcionamiento completo del sistema con todos los periféricos conectados. |
 | [completar] | Armado en placa experimental soldada | [completar] |
 | [completar] | Mediciones, video y memoria final | [completar] |
@@ -551,7 +551,9 @@ Cada módulo se probó primero por separado en protoboard. Los resultados se pre
 | HM-10 | Vinculación con Serial Bluetooth Terminal y eco de comandos. | [completar] | ✅ |
 | Placa soldada | Continuidad y repetición de todos los ensayos anteriores. | [completar] | ⏳ |
 
-> ⚠️ **Pendiente:** agregar fotos de los ensayos (pauta: "es muy importante que haya fotografías que sirvan de evidencia").
+Los videos de las primeras pruebas en protoboard, presentados junto con el informe de avance, están en [esta carpeta de Google Drive](https://drive.google.com/drive/folders/1ZyYUTGAAnOTyrctYwx_wdTOUeB4koOtX) (acceso con cuenta FIUBA).
+
+> ⚠️ **Pendiente:** agregar fotos de los ensayos (pauta: "es muy importante que haya fotografías que sirvan de evidencia"). Si la carpeta de Drive se mantiene como evidencia, confirmar que los docentes tengan acceso.
 
 ### 4.2 Pruebas funcionales del firmware
 
@@ -674,39 +676,39 @@ Se implementó el modo *Sleep* del Cortex-M3: al terminar cada vuelta del *super
 
 ### 4.9 Cumplimiento de requisitos
 
-El estado final de cada requisito se presenta en la tabla 4.8, con la referencia de colores de la tabla 4.9.
+El estado final de cada requisito se presenta en la tabla 4.8, junto con el estado que tenía en el informe de avance del 20/11/2026, para mostrar la evolución. La referencia de colores está en la tabla 4.9.
 
 <p align="center"><em>Tabla 4.8: Cumplimiento de requisitos.</em></p>
 
-| ID | Requisito (resumido) | Estado | Observaciones |
-| :---: | :--- | :---: | :--- |
-| 1.1 | Medición periódica de temperatura con NTC por ADC | 🟢 | |
-| 1.2 | Potenciómetro para la luz interna | 🟢 | Solo luz (ver tabla 2.2). |
-| 2.1 | LCD con menú navegable | 🟢 | |
-| 2.2 | Pantalla de bienvenida y reposo | 🟢 | |
-| 2.3 | Temperatura actual y objetivo en el LCD | 🟢 | |
-| 2.4 | Tiempo restante en el LCD | 🟢 | |
-| 2.5 | Alerta de falla en el LCD | 🟢 | |
-| 3.1 | Botones ENTER, NEXT y ESC | 🟢 | Más B1 como STOP. |
-| 3.2 | Antirrebote por software | 🟢 | |
-| 3.3 | Dip switches para la fuente de calor | 🟢 | |
-| 4.1 a 4.3 | LEDs IDLE, HEATING y SETPOINT OK | 🟢 | Unificados en un LED RGB. |
-| 4.4 | Titileo de LEDs ante falla | 🟢 | |
-| 5.1 | Resistencias con relés/MOSFETs | 🔴 | Reemplazadas por LEDs (ver subsección 3.2.5). |
-| 5.2 | Luz interna por PWM | 🟢 | |
-| 6.1 | Melodía al confirmar o iniciar | 🟢 | |
-| 6.2 | Patrón repetitivo al terminar | 🟢 | |
-| 6.3 | Tono continuo ante falla | 🟢 | |
-| 7.1 | Comunicación con HM-10 | 🟢 | |
-| 7.2 | Envío periódico de temperatura y tiempo | 🟢 | |
-| 7.3 | Inicio, pausa y STOP desde la app | 🟢 | |
-| 7.4 | Recetas desde la app | 🟢 | `REC` y `RUN`. |
-| 7.5 | Avisos de alarma y cancelación a la app | 🟢 | |
-| 8.1 | Recetas en memoria no volátil | 🟢 | Flash interna. |
-| 8.2 | Recuperación de la configuración al iniciar | 🟢 | |
-| 9.1 | *Bare metal*, *super-loop* | 🟢 | |
-| 9.2 | *Tick* de 1 ms, tareas no bloqueantes | 🟡 | Salvo el borrado de página de Flash (ver sección 4.6). |
-| 9.3 | Máquinas de estado | 🟢 | |
+| ID | Requisito (resumido) | Avance (20/11) | Estado final | Observaciones |
+| :---: | :--- | :---: | :---: | :--- |
+| 1.1 | Medición periódica de temperatura con NTC por ADC | 🟢 | 🟢 | |
+| 1.2 | Potenciómetro para la luz interna | 🟡 | 🟢 | Solo luz (ver tabla 2.2). |
+| 2.1 | LCD con menú navegable | 🟢 | 🟢 | |
+| 2.2 | Pantalla de bienvenida y reposo | 🟢 | 🟢 | |
+| 2.3 | Temperatura actual y objetivo en el LCD | 🟢 | 🟢 | |
+| 2.4 | Tiempo restante en el LCD | 🟡 | 🟢 | |
+| 2.5 | Alerta de falla en el LCD | 🟡 | 🟢 | |
+| 3.1 | Botones ENTER, NEXT y ESC | 🟢 | 🟢 | Más B1 como STOP. |
+| 3.2 | Antirrebote por software | 🟢 | 🟢 | |
+| 3.3 | Dip switches para la fuente de calor | 🟢 | 🟢 | |
+| 4.1 a 4.3 | LEDs IDLE, HEATING y SETPOINT OK | 🟢 | 🟢 | Unificados en un LED RGB. |
+| 4.4 | Titileo de LEDs ante falla | 🟡 | 🟢 | |
+| 5.1 | Resistencias con relés/MOSFETs | 🔴 | 🔴 | Reemplazadas por LEDs (ver subsección 3.2.5). |
+| 5.2 | Luz interna por PWM | 🟡 | 🟢 | |
+| 6.1 | Melodía al confirmar o iniciar | 🟡 | 🟢 | |
+| 6.2 | Patrón repetitivo al terminar | 🟢 | 🟢 | |
+| 6.3 | Tono continuo ante falla | 🟡 | 🟢 | |
+| 7.1 | Comunicación con HM-10 | 🟢 | 🟢 | |
+| 7.2 | Envío periódico de temperatura y tiempo | 🟢 | 🟢 | |
+| 7.3 | Inicio, pausa y STOP desde la app | 🟡 | 🟢 | |
+| 7.4 | Recetas desde la app | 🟡 | 🟢 | `REC` y `RUN`. |
+| 7.5 | Avisos de alarma y cancelación a la app | 🟢 | 🟢 | |
+| 8.1 | Recetas en memoria no volátil | 🟢 | 🟢 | Flash interna. |
+| 8.2 | Recuperación de la configuración al iniciar | 🟢 | 🟢 | |
+| 9.1 | *Bare metal*, *super-loop* | 🟢 | 🟢 | |
+| 9.2 | *Tick* de 1 ms, tareas no bloqueantes | 🟢 | 🟡 | Salvo el borrado de página de Flash (ver sección 4.6). |
+| 9.3 | Máquinas de estado | 🟢 | 🟢 | |
 
 > ⚠️ **Pendiente:** revisar cada estado con lo que efectivamente se probó en la prueba integral y en la placa soldada. Estos valores son la propuesta de este borrador.
 
@@ -715,7 +717,7 @@ El estado final de cada requisito se presenta en la tabla 4.8, con la referencia
 | Estado | Significado |
 | :---: | :--- |
 | 🟢 | Implementado y verificado. |
-| 🟡 | Implementado con limitaciones. |
+| 🟡 | Implementado con limitaciones (en la columna de avance: en proceso de implementación). |
 | 🔴 | No implementado; se reemplazó por otra solución (se aclara en observaciones). |
 
 ### 4.10 Comparación con sistemas similares
@@ -743,7 +745,7 @@ La comparación del trabajo con los productos de la sección 1.3 se presenta en 
 | :--- | :--- |
 | Bitácora de entregas | [README.md](README.md) |
 | Propuesta, requisitos y casos de uso | [PROPUESTA.md](PROPUESTA.md) |
-| Informe de avance | [Informe Propuesta.md](Informe%20Propuesta.md) [completar: en `main` quedó con ese nombre; renombrar a `Informe_de_Avance.md` si corresponde] |
+| Informe de avance | [Informe_de_Avance.md](Informe_de_Avance.md) [completar: en `main` el archivo quedó como `Informe Propuesta.md`; renombrarlo o cambiar este link] |
 | Memoria técnica (este documento) | [Memoria_Video_Codigo.md](Memoria_Video_Codigo.md) |
 | Proyecto de STM32CubeIDE | [completar: carpeta del proyecto, por ejemplo `tdse-tf_horno/`] |
 | Simulación en PC | [completar: `tdse-tf_horno/test_pc/`] |
@@ -773,7 +775,7 @@ La comparación del trabajo con los productos de la sección 1.3 se presenta en 
 
 ### 5.3 Próximos pasos
 
-- Diseñar un PCB propio que reemplace la placa experimental.
+- Diseñar un PCB propio que reemplace la placa experimental. En el informe de avance se había previsto el PCB; para la entrega se optó por la placa experimental soldada. [completar o borrar según lo que hagan]
 - Agregar una etapa de potencia real: relés o SSR (*Solid State Relay*) con *driver* y alimentación propios, aislados del micro.
 - Reemplazar la NTC por una termocupla tipo K con MAX6675 por SPI, para superar los 250 °C.
 - Desarrollar una app propia (por ejemplo, en MIT App Inventor) con interfaz gráfica.
