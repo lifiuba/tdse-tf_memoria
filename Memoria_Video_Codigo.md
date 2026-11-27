@@ -248,7 +248,16 @@ Módulo BLE basado en el CC2541 [6] que expone un puerto serie transparente a 96
 
 #### 2.3.5 Aplicación móvil
 
-[completar: Serial Bluetooth Terminal [7] con botones programados (M1 `START`, M2 `PAUSE`, M3 `STOP`, M4 `STATUS`) y fin de línea LF, y/o la app propia en MIT App Inventor [8]. Incluir captura de pantalla como figura 2.1.]
+Como interfaz móvil se usó la aplicación Serial Bluetooth Terminal [7] para Android, que reconoce módulos BLE como el HM-10 y permite programar botones de macro. Se configuraron de la siguiente forma:
+
+- Conexión: menú *Devices*, pestaña *Bluetooth LE*, y selección del módulo.
+- Envío: fin de línea LF (`\n`), que es el que el *firmware* espera para procesar cada comando.
+- Recepción: fin de línea CR+LF, que es con el que el horno termina sus mensajes.
+- Macros: M1 `START`, M2 `PAUSE`, M3 `STOP` y M4 `STATUS`.
+
+Los comandos con parámetros (`SET`, `REC` y `RUN`) se escribieron en el cuadro de texto de la aplicación.
+
+> ⚠️ **Pendiente:** agregar una captura de la terminal durante una cocción como figura 2.1. Si se llega a hacer una app propia (por ejemplo, en MIT App Inventor [8]), describirla acá.
 
 ---
 
@@ -268,8 +277,8 @@ El trabajo se desarrolló en etapas, que se resumen en la tabla 3.1. Las entrega
 | [completar] | Asignación de pines | Se remapearon periféricos para evitar conflictos entre el TP3 y el TP4 (ver subsección 3.2.2). |
 | [completar] | Cambios de *hardware* | EEPROM externa reemplazada por Flash interna; relés reemplazados por LEDs; resistencia fija de la NTC cambiada de 4,7 kΩ a 1 kΩ y límites de temperatura ajustados al rango de la NTC. |
 | 20/11/2026 | Entrega 03: [Informe de Avance](Informe_de_Avance.md) | Primeras pruebas por módulo en protoboard. En ese momento estaban implementados pero sin probar el tiempo restante y la alerta de falla en el LCD (2.4, 2.5); faltaban configurar la melodía y el tono de falla del *buzzer* (6.1, 6.3), el titileo de los LEDs (4.4) y el PWM de la luz (5.2); y los comandos recibidos por BLE todavía no ejecutaban la acción pedida (7.3, 7.4). Ya se habían decidido los LEDs en lugar de relés y el LED RGB. |
-| [completar] | Depuración en protoboard | Se resolvieron fallas del LCD (conexionado) y un error de inicialización del actuador que dejaba apagado el LED de reposo (ver sección 4.2). Se completaron los pendientes del informe de avance y se verificó que los comandos BLE ejecutaran la acción correspondiente. [completar: qué se cambió para que funcionaran los comandos, el *buzzer* y el PWM] |
-| [completar] | Prueba integral en protoboard | Funcionamiento completo del sistema con todos los periféricos conectados. |
+| [completar] | Depuración en protoboard | Se resolvieron fallas del LCD (conexionado), un dip switch que leía siempre activo por un puente olvidado y un error de inicialización del actuador que dejaba apagado el LED de reposo. Los comandos BLE no se ejecutaban por la configuración del fin de línea en la app y por un eco en el enlace que generaba una catarata de respuestas de error; se agregó al *firmware* un modo de diagnóstico y protecciones contra el eco (ver secciones 4.1 y 4.2). Para las pruebas se bajaron los mínimos de temperatura y tiempo. |
+| [completar] | Prueba integral en protoboard | Funcionamiento completo del sistema con todos los periféricos conectados, comandado desde el panel y desde Serial Bluetooth Terminal (ver sección 4.3). |
 | [completar] | Armado en placa experimental soldada | [completar] |
 | [completar] | Mediciones, video y memoria final | [completar] |
 
@@ -307,7 +316,7 @@ La asignación final se presenta en la tabla 3.2.
 | Potenciómetro | ADC1_IN0 | PA0 | A0 |
 | NTC | ADC1_IN1 | PA1 | A1 |
 | Luz interna | TIM3_CH3 (PWM) | PB0 | A3 |
-| HM-10 RXD / TXD | USART3 TX / RX (*partial remap*), 9600 bps | PC10 / PC11 | CN7-1 / CN7-2 |
+| HM-10 RXD / TXD | USART3 TX / RX (*partial remap*), 9600 bps; RX con *pull-up* | PC10 / PC11 | CN7-1 / CN7-2 |
 | LED resistencia superior / inferior / ventilador | GPIO salida | PC4 / PC5 / PC6 | CN10-34 / CN10-6 / CN10-4 |
 | LEDs de estado IDLE / HEATING / SETPOINT (LED RGB) | GPIO salida | PC8 / PC9 / PB12 | CN10-2 / CN10-1 / CN10-16 |
 | *Buzzer* | GPIO salida | PB13 | CN10-30 |
@@ -320,7 +329,7 @@ El esquema completo se presenta en la figura 3.1. Los criterios de diseño de ca
 
 - Botones y dip switches: se conectaron entre el pin y GND, con la resistencia de *pull-up* interna del micro. Por eso no llevan resistencias externas y son activos en bajo.
 - LEDs: cada uno con una resistencia serie de 330 Ω. [completar: resistencias del LED RGB]
-- *Buzzer*: es un *buzzer* activo de 5 V manejado con un transistor NPN (BC337 / 2N2222) y 1 kΩ en la base, porque su consumo supera lo recomendable para un pin del micro.
+- *Buzzer*: [completar: modelo y conexión final].
 - NTC: divisor entre 3,3 V y GND con la resistencia fija arriba y la NTC abajo (ver subsección 3.2.4). Nunca se alimentó a 5 V, porque la entrada del ADC no lo tolera.
 - Potenciómetro: entre 3,3 V y GND, con el cursor al ADC.
 - HM-10: conexión cruzada (TXD del módulo al RX del micro y viceversa), alimentado a [completar: 5 V o 3,3 V según el módulo].
@@ -358,7 +367,7 @@ En la propuesta, las resistencias y el ventilador se iban a manejar con relés. 
 | :--- | :---: | :---: | :---: | :---: |
 | LEDs de cargas (330 Ω) | 3,3 V (GPIO) | [completar] | 3 | [completar] |
 | LED RGB | 3,3 V (GPIO) | [completar] | 1 | [completar] |
-| *Buzzer* (por el NPN) | 5 V | [completar] | 1 | [completar] |
+| *Buzzer* | [completar] | [completar] | 1 | [completar] |
 | LCD con *backlight* | 5 V | [completar] | 1 | [completar] |
 | HM-10 | [completar] | [completar] | 1 | [completar] |
 | **Total** | | | | **[completar]** |
@@ -469,7 +478,8 @@ Los aspectos principales de su diseño fueron:
 - En `PREHEAT` y `COOKING`, `task_system` le pasa a `task_control` la temperatura objetivo y la fuente de calor; el control decide cuándo encender cada carga.
 - Los dip switches se leen en todo momento, de modo que la fuente de calor puede cambiarse con el horno funcionando.
 - El STOP por ESC se implementó en dos pasos. La primera pulsación muestra "Cancelar coccion / ESC=Si ENTER=No" y abre una ventana de 5 s. Un segundo ESC cancela; ENTER o el vencimiento de la ventana descartan el pedido. El STOP de B1 y el de la app son inmediatos.
-- Los límites se fijaron en el rango de la NTC: temperatura objetivo máxima de 230 °C y paso a FALLA a 255 °C. Los valores mínimos de temperatura y tiempo son [completar].
+- Los límites se fijaron en el rango de la NTC: temperatura objetivo máxima de 230 °C y paso a FALLA a 255 °C. Los límites, el paso de cada valor en el menú y los valores por defecto se definieron como constantes en `task_system_attribute.h`, de modo que el menú, la validación de `SET` y la carga desde la Flash usan los mismos valores. En la primera versión los mínimos eran 50 °C (paso de 10 °C) y 5 min (paso de 5 min). Para las pruebas en protoboard se bajaron a 20 °C (paso de 5 °C) y 1 min (paso de 1 min), para poder recorrer un ciclo completo con la NTC a temperatura ambiente. Los valores de la versión entregada son [completar].
+- `START` desde la app solo se acepta en reposo o en pausa, y con al menos una resistencia elegida (DIP1 o DIP2). Si no hay ninguna, el horno responde `ERR:NO_HEAT_SOURCE` y el LCD muestra durante 2 s "Sin resistencia / Active DIP 1 o 2".
 
 #### 3.3.4 Medición de temperatura
 
@@ -505,6 +515,16 @@ El borrado de una página de Flash detiene el acceso a la memoria durante unos m
 
 Con DIP4 activo, el horno además envía la línea de estado cada 1 s y los avisos `ALARM:OVERTEMP`, `ALARM:SENSOR`, `INFO:PREHEAT_DONE` e `INFO:DONE`. Como la línea de estado supera los 20 bytes de un paquete BLE, la app la recibe partida y debe reconstruirla hasta el fin de línea.
 
+Los comandos deben terminar en LF y las respuestas del horno terminan en CR+LF. Las respuestas de error son `ERR:CMD` (comando desconocido o mal escrito), `ERR:SET` (parámetros fuera de rango), `ERR:BLE_OFF` (DIP4 abierto) y `ERR:NO_HEAT_SOURCE` (sin resistencia elegida).
+
+La recepción usa un *buffer* circular de 64 bytes que llena la interrupción de la UART, y la tarea arma líneas de hasta 32 caracteres. La transmisión usa una cola de 4 mensajes de hasta 48 bytes, para que un mensaje no pise a otro mientras se está enviando. A partir de lo observado en las pruebas (ver sección 4.1), se agregaron tres protecciones:
+
+1. Si vuelve al horno uno de sus propios mensajes (`ST:`, `OK:`, `ERR:`, `INFO:`, `ALARM:`), se ignora.
+2. Las líneas con caracteres no imprimibles se descartan sin responder.
+3. Se responde como mucho un `ERR:CMD` por segundo (`BLE_ERR_MIN_PERIOD_MS`).
+
+Además, se dejó un modo de diagnóstico del enlace (`BLE_TEST_ECHO`), que en lugar de interpretar comandos devuelve lo recibido y envía cada 1 s una línea `PING n rx=<bytes recibidos>`. Sirve para verificar el cableado y el enlace sin depender del intérprete de comandos.
+
 #### 3.3.8 Fragmentos de código relevantes
 
 > ⚠️ **Pendiente:** pegar 2 o 3 fragmentos cortos con las líneas numeradas, como pide la pauta (Código 3.1, 3.2...), y explicarlos haciendo referencia a los números de línea. Sugerencias:
@@ -515,20 +535,23 @@ Con DIP4 activo, el horno además envía la línea de estado cada 1 s y los avis
 
 #### 3.3.9 Pantallas del LCD
 
-<p align="center"><em>Tabla 3.6: Pantallas del LCD en cada estado.</em></p>
+<p align="center"><em>Tabla 3.6: Pantallas del LCD en cada estado. Los valores numéricos son de ejemplo.</em></p>
 
 | Estado | Fila 1 | Fila 2 |
 | :--- | :--- | :--- |
-| IDLE | `HORNO   ENT=Menu` | [completar] |
+| IDLE | `HORNO   ENT=Menu` | `T: 22C S-- BT` (temperatura, resistencias elegidas y BLE habilitado) |
 | MENU | [completar] | [completar] |
 | SET_TEMP | [completar] | [completar] |
 | SET_TIME | [completar] | [completar] |
-| PREHEAT | [completar] | [completar] |
-| COOKING | [completar] | [completar] |
+| PREHEAT | `T: 22/ 25C S--` (medida / objetivo) | `Precalentando...` |
+| COOKING | `T: 25/ 25C S--` [confirmar] | `Resta 00:59` |
 | PAUSED | [completar] | [completar] |
 | Confirmación de STOP | `Cancelar coccion` | `ESC=Si ENTER=No` |
-| DONE | [completar] | [completar] |
-| FAULT | [completar] | [completar] |
+| DONE | `COCCION TERMINAD` | `ENTER p/ salir` |
+| FAULT (falla de sensor) | `!! FALLA !!` | `SENSOR DE TEMP.` |
+| FAULT superada | `FALLA superada` | `ESC p/ reset` |
+| Cancelación | `COCCION CANCELADA` | — |
+| `START` sin resistencia elegida | `Sin resistencia` | `Active DIP 1 o 2` |
 
 ---
 
@@ -543,12 +566,13 @@ Cada módulo se probó primero por separado en protoboard. Los resultados se pre
 | Ensayo | Procedimiento | Resultado | Estado |
 | :--- | :--- | :--- | :---: |
 | LCD | Pantalla de reposo y navegación del menú. | Al principio el LCD no mostraba nada aunque el *firmware* escribía bien la memoria del display (verificado con *Live Expressions*). Se encontró un problema de conexionado y se corrigió. [completar detalle] | ✅ |
-| Botones y dips | Lectura con antirrebote y eventos en *Live Expressions*. | [completar] | ✅ |
+| Botones y dips | Lectura con antirrebote y eventos en *Live Expressions*; lectura directa del registro de entrada del puerto C (`GPIOC->IDR`, dirección `0x40011008`). | DIP1 (PC0) leía siempre activo aunque estuviera abierto. La causa era un puente de A5 a GND que se había usado para simular el dip antes de tenerlo; A5 es el mismo pin que PC0. Al quitarlo, los 4 dips leyeron correctamente. | ✅ |
 | NTC | Lectura a temperatura ambiente y calentando el sensor con los dedos. | [completar: lectura obtenida vs. termómetro de referencia] | ✅ |
 | Potenciómetro y PWM | Variación del brillo de la luz interna. | [completar] | ✅ |
-| *Buzzer* | Patrones corto, repetitivo y continuo. | [completar] | ✅ |
+| *Buzzer* | Patrones corto, repetitivo y continuo. | [completar] | [completar] |
 | LEDs de cargas y de estado | Encendido según el estado y la fuente de calor. | [completar] | ✅ |
-| HM-10 | Vinculación con Serial Bluetooth Terminal y eco de comandos. | [completar] | ✅ |
+| HM-10 | Vinculación con Serial Bluetooth Terminal, recepción de la línea de estado y envío de comandos. | La placa transmitía bien (llegaban los `ST:` cada 1 s), pero los comandos no se ejecutaban. Había dos causas: la app no enviaba fin de línea y en el enlace aparecía un eco que generaba unas 20 respuestas `ERR:CMD` por segundo. Con el modo `BLE_TEST_ECHO` se verificó que a PC11 entraban caracteres que nadie había escrito, con el ritmo de los intervalos de conexión BLE (unos 45 ms), lo que ubicó el origen del lado Bluetooth y no en el cableado. Con LF en la app y las protecciones de la subsección 3.3.7, los comandos funcionaron. | ✅ |
+| Alimentación compartida de 5 V | Conexión y desconexión del HM-10 con la placa encendida. | Al desconectar el VCC del módulo con la placa encendida, la caída en la línea de 5 V reiniciaba el LCD, que quedaba mostrando cuadrados hasta un *reset*. Se adoptó como procedimiento conectar y desconectar módulos con la placa apagada. | ✅ |
 | Placa soldada | Continuidad y repetición de todos los ensayos anteriores. | [completar] | ⏳ |
 
 Los videos de las primeras pruebas en protoboard, presentados junto con el informe de avance, están en [esta carpeta de Google Drive](https://drive.google.com/drive/folders/1ZyYUTGAAnOTyrctYwx_wdTOUeB4koOtX) (acceso con cuenta FIUBA).
@@ -574,7 +598,14 @@ Antes de contar con el *hardware* armado, la lógica se verificó con una simula
 
 En total pasaron [completar: 42] verificaciones, sin errores de acceso a memoria.
 
-Durante la prueba en la placa se encontró un error que la simulación no detectó: al arrancar, `task_system` pedía encender el LED de reposo antes de que se inicializara `task_actuator`, y la inicialización de esta última borraba ese pedido. El LED de reposo recién se encendía después de la primera cocción. Se corrigió quitando de `task_actuator_init()` el reinicio del evento pendiente, ya que las variables arrancan en cero de todos modos.
+Durante la prueba en la placa se encontró un error que la simulación no detectó: al arrancar, `task_system` pedía encender el LED de reposo antes de que se inicializara `task_actuator`, y la inicialización de esta última borraba ese pedido. El LED de reposo recién se encendía después de la primera cocción. Se corrigió quitando de `task_actuator_init()` el reinicio del evento pendiente, ya que las variables arrancan en cero de todos modos. El caso se verificó leyendo el registro de salida del puerto C (`GPIOC->ODR`, dirección `0x4001100C`) en *Live Expressions*: el bit 8 (PC8, LED de reposo) pasó a valer 1 al arrancar.
+
+Las pruebas del enlace BLE mostraron otros dos problemas del *firmware*:
+
+- Cuando se encolaban varios mensajes seguidos, uno podía pisar al que se estaba transmitiendo y llegaban líneas con el comienzo roto. Se resolvió con la cola de transmisión descripta en la subsección 3.3.7.
+- El horno respondía `ERR:CMD` a cada línea con ruido o a cada eco de sus propios mensajes, lo que amplificaba el problema. Se agregaron las tres protecciones de esa misma subsección.
+
+Durante esta etapa también se encontró que, al copiar a mano fragmentos de archivos nuevos sobre los viejos, quedaban versiones mezcladas en la placa. Para detectarlo se agregó al modo de diagnóstico un contador (`task_ble_dta.ping`) que solo existe en la versión nueva: si *Live Expressions* no lo encontraba, la placa tenía grabado el *firmware* anterior.
 
 ### 4.3 Pruebas de integración
 
@@ -586,14 +617,18 @@ La prueba de integración consistió en recorrer los tres casos de uso con todos
 | :--- | :---: | :---: |
 | Cocción manual completa desde el panel (caso de uso 1) | ✅ | ⏳ |
 | Cocción desde la app con `SET` y `START` (caso de uso 2) | ✅ | ⏳ |
-| Ejecución de una receta guardada con `RUN` | [completar] | ⏳ |
-| Pausa y reanudación desde el panel y desde la app | [completar] | ⏳ |
+| Guardado de una receta con `REC`, *reset* de la placa y ejecución con `RUN` | ✅ | ⏳ |
+| Pausa y reanudación desde el panel y desde la app | ✅ | ⏳ |
 | STOP desde B1, desde la app y con ESC en dos pasos (caso de uso 3) | ✅ | ⏳ |
-| Cambio de la fuente de calor con los dips durante la cocción | [completar] | ⏳ |
-| Sobretemperatura simulada y salida de FAULT | [completar] | ⏳ |
-| Recuperación de la configuración tras un reinicio | [completar] | ⏳ |
+| Cambio de la fuente de calor con los dips durante la cocción | ✅ | ⏳ |
+| Falla de sensor (NTC desconectada), alerta en LCD y app, y salida de FAULT | ✅ | ⏳ |
+| Sobretemperatura simulada con el potenciómetro (`ADC_SIMULATE_TEMP_WITH_POT`) | [completar] | ⏳ |
+| `START` sin resistencia elegida (respuesta `ERR:NO_HEAT_SOURCE`) | ✅ | ⏳ |
+| Recuperación de la configuración tras un reinicio | ✅ | ⏳ |
 
-Para las pruebas rápidas se usaron valores bajos: por ejemplo, `SET:25,1` (25 °C durante 1 minuto) hace que el horno alcance el objetivo enseguida y permite ver el ciclo completo en poco tiempo.
+En protoboard, todas las pruebas se hicieron con el sistema completo conectado y comandado desde el panel y desde Serial Bluetooth Terminal. Para recorrer los ciclos en poco tiempo se usaron valores bajos. Con `SET:30,1` y luego `START`, el horno pasó a precalentamiento; al calentar la NTC con los dedos alcanzó el objetivo, pasó a cocción y terminó al minuto. La secuencia de comandos usada para verificar el enlace fue `STATUS`, `SET:30,1`, `START`, `PAUSE`, `START` y `STOP`, controlando en cada paso la respuesta en la app, el LCD y los LEDs.
+
+> ⚠️ **Pendiente:** revisar esta tabla. Las filas marcadas ✅ en protoboard son las del plan de pruebas que se recorrió; corregir las que no se hayan hecho.
 
 El video del funcionamiento está disponible en: [completar link al video].
 
@@ -770,7 +805,12 @@ La comparación del trabajo con los productos de la sección 1.3 se presenta en 
 - Planificar la asignación de pines de todos los periféricos juntos, porque reunir proyectos distintos genera conflictos (PA6, PB10, PB6).
 - Elegir los componentes de acondicionamiento para el rango de trabajo y no para la temperatura ambiente, como pasó con la resistencia del divisor de la NTC.
 - El orden de inicialización de las tareas importa cuando una tarea le envía eventos a otra durante su propio *init*.
-- Verificar con el depurador (*Live Expressions*) si un problema es de *firmware* o de *hardware* antes de cambiar código, como en el caso del LCD.
+- Verificar con el depurador (*Live Expressions*) si un problema es de *firmware* o de *hardware* antes de cambiar código, como en el caso del LCD. Leer directamente los registros de los puertos (IDR y ODR) resultó la forma más rápida de saber qué ve el micro en cada pin.
+- Retirar los puentes provisorios usados para simular componentes antes de conectar los definitivos.
+- En un enlace serie, no responder a cualquier línea recibida: un eco o ruido puede convertir cada respuesta en una nueva entrada y saturar el enlace.
+- Contar con un modo de diagnóstico simple (eco y contador de bytes) ayuda a separar problemas de cableado de problemas del protocolo.
+- Reemplazar archivos completos y no fragmentos al actualizar el *firmware*, y tener una forma de confirmar qué versión está grabada en la placa.
+- No conectar ni desconectar módulos con la placa alimentada cuando comparten la línea de 5 V con otros periféricos.
 - [completar]
 
 ### 5.3 Próximos pasos
@@ -792,7 +832,7 @@ Durante el trabajo se usó Claude (Anthropic) como asistente. Todo lo generado s
 - Generación del proyecto base de *firmware*, uniendo la arquitectura del TP3 con el ADC y el PWM del TP4 y agregando las tareas nuevas, siguiendo el estilo de código de la materia.
 - Simulación en PC de la lógica del *firmware* con funciones de la HAL simuladas.
 - Asignación de pines sin conflictos y esquema de conexiones de la placa.
-- Diagnóstico durante las pruebas en protoboard: interpretación de valores de *Live Expressions*, error de inicialización de `task_actuator` y fallas del LCD.
+- Diagnóstico durante las pruebas en protoboard: interpretación de valores de *Live Expressions* y de los registros de los puertos, error de inicialización de `task_actuator`, fallas del LCD, el dip con el puente olvidado y el eco del enlace BLE (con el modo de diagnóstico `BLE_TEST_ECHO` y las protecciones agregadas a `task_ble`).
 - Explicación del funcionamiento del HM-10 (BLE, servicio `FFE0`, paquetes de 20 bytes) y elección de la app de prueba.
 - Diagnóstico de problemas con los *pull requests* de GitHub en las entregas.
 
